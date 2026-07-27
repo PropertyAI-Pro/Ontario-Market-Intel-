@@ -1,0 +1,103 @@
+{
+  "vintage": "Fetched July 27, 2026",
+  "listings": [
+    {
+      "area": "Oshawa / Durham",
+      "name": "300 Athol St, Whitby",
+      "price": 2100000,
+      "units": 8,
+      "unitMix": "8 × 2BR",
+      "sf": 8202,
+      "broker": "Royal LePage Frank",
+      "listed": "Jun 2026",
+      "source": "LoopNet",
+      "url": "https://www.loopnet.ca/Listing/300-Athol-St-Whitby-ON/41044568/",
+      "fit": "strong",
+      "fitNote": "Textbook system fit: 8 units, brick & block, 50 years same owner, explicit rental upside, coin laundry income. Legacy rents almost certain — this is the repositioning profile the 3-4 year capital recovery model wants."
+    },
+    {
+      "area": "Oshawa / Durham",
+      "name": "150 Celina St, Oshawa",
+      "price": 1188888,
+      "units": null,
+      "unitMix": "Apartment bldg, 3,184 SF",
+      "sf": 3184,
+      "broker": "Our Neighbourhood Realty",
+      "listed": "May 2026",
+      "source": "LoopNet",
+      "url": "https://www.loopnet.ca/Listing/150-Celina-St-Oshawa-ON/40661915/",
+      "fit": "potential",
+      "fitNote": "Central Oshawa, entry price inside the band. Unit count and rent roll unpublished — request rent roll and 12-month actuals before underwriting."
+    },
+    {
+      "area": "Oshawa / Durham",
+      "name": "271 Tresane St, Oshawa",
+      "price": 1799900,
+      "units": 4,
+      "unitMix": "4 × 2BR new build (10 units w/ 255 Tresane)",
+      "sf": 3524,
+      "broker": "CPPI Realty",
+      "listed": "Jun 2025",
+      "source": "LoopNet",
+      "url": "https://www.loopnet.ca/Listing/271-Tresane-St-Oshawa-ON/36537559/",
+      "fit": "weak",
+      "fitNote": "New build already leased at market with scheduled increases — $450k/unit and no rent gap means no forced-appreciation lever. Fails the capital recovery gate despite being a clean asset."
+    },
+    {
+      "area": "Oshawa / Durham",
+      "name": "Simcoe Residence, 1645 Simcoe St N",
+      "price": null,
+      "units": 15,
+      "unitMix": "15 units / 61 beds, student housing",
+      "sf": 25390,
+      "broker": "Colliers",
+      "listed": "Jun 2026",
+      "source": "LoopNet",
+      "url": "https://www.loopnet.ca/Listing/1645-Simcoe-St-N-Oshawa-ON/40758328/",
+      "fit": "potential",
+      "fitNote": "Purpose-built student (2015) beside Ontario Tech / Durham College, 96.7% occupancy. Bigger than target band and student model carries immigration-policy exposure — but rental optimization upside is real. Price on request."
+    },
+    {
+      "area": "Oshawa / Durham",
+      "name": "Ontario East Portfolio",
+      "price": null,
+      "units": 152,
+      "unitMix": "6 properties: Acton, Whitby, Oshawa, Brighton",
+      "sf": 138812,
+      "broker": "Avison Young",
+      "listed": "Dec 2025",
+      "source": "LoopNet",
+      "url": "https://www.loopnet.ca/Listing/Ontario-East-Portfolio/38626338/",
+      "fit": "weak",
+      "fitNote": "152 units, 75% renovated, stabilized. Institutional scale and the value-add is mostly done. JV-syndication territory, not a personal capital-recovery play."
+    },
+    {
+      "area": "Hamilton",
+      "name": "4-unit apartment, Hamilton Mountain",
+      "price": 1430000,
+      "units": 4,
+      "unitMix": "4 units, 3,000 SF",
+      "sf": 3000,
+      "broker": "via LoopNet",
+      "listed": "2026",
+      "source": "LoopNet",
+      "url": "https://www.loopnet.com/search/apartment-buildings/hamilton-on--canada/for-sale/",
+      "fit": "potential",
+      "fitNote": "Listed ~$1.02M USD (~$1.43M CAD). Under 5 units means residential financing rules, not DCR-based commercial — verify rents vs Mountain market before pursuing."
+    },
+    {
+      "area": "Hamilton",
+      "name": "9-unit mixed-use, downtown Hamilton",
+      "price": null,
+      "units": 9,
+      "unitMix": "6 × 2BR, 2 × 1BR, 1 bachelor + retail",
+      "sf": null,
+      "broker": "Re/Max Escarpment",
+      "listed": "Oct 2024",
+      "source": "LoopNet",
+      "url": "https://www.loopnet.ca/search/commercial-real-estate/hamilton-on--canada/for-sale/",
+      "fit": "potential",
+      "fitNote": "Strong unit mix with 9 parking spaces and ground-floor retail. Mixed-use complicates CMHC financing but the residential count fits the band. New boiler 2020."
+    }
+  ]
+}

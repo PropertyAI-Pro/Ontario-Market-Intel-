@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multifamily Inspection Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #10141a;
+  --bg-raise: #171c24;
+  --bg-hover: #1d232d;
+  --ink: #e8ebef;
+  --ink-dim: #9aa4b2;
+  --ink-faint: #5c6674;
+  --line: #232a35;
+  --line-strong: #2f3844;
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.12);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251, 191, 36, 0.12);
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.12);
+  --accent: #7dd3fc;
+  --accent-dim: rgba(125, 211, 252, 0.1);
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --display: 'Space Grotesk', sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+
+header {
+  padding: 32px 0 24px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+h1 {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.header-row { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+.data-stamp { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); text-align: right; }
+.data-stamp span { color: var(--amber); }
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.summary > div { background: var(--bg-raise); padding: 16px 18px; }
+.summary .label { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 6px; }
+.summary .value { font-family: var(--mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.summary .sub { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+.control { display: flex; flex-direction: column; gap: 6px; }
+.control label { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); }
+select, input[type="number"], input[type="text"] {
+  background: var(--bg-raise);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  min-width: 150px;
+  outline: none;
+}
+select:focus, input:focus { border-color: var(--accent); }
+button {
+  background: var(--bg-raise);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  padding: 9px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+button:hover { background: var(--bg-hover); border-color: var(--ink-faint); }
+button.primary { border-color: var(--accent); color: var(--accent); }
+button.primary:hover { background: var(--accent-dim); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.view-toggle { display: flex; gap: 0; border: 1px solid var(--line-strong); border-radius: 6px; overflow: hidden; }
+.view-toggle button { border: none; border-radius: 0; padding: 9px 14px; }
+.view-toggle button.active { background: var(--accent-dim); color: var(--accent); }
+
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+thead th {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  text-align: right;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-strong);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+thead th:first-child, thead th:nth-child(2) { text-align: left; }
+thead th:hover { color: var(--ink-dim); }
+thead th .arrow { color: var(--accent); margin-left: 4px; }
+tbody td {
+  padding: 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+tbody td:first-child, tbody td:nth-child(2) { text-align: left; font-family: var(--sans); }
+tbody tr { transition: background 0.1s; cursor: pointer; }
+tbody tr:hover { background: var(--bg-hover); }
+tbody tr.targeted td:first-child { border-left: 2px solid var(--accent); }
+.region-name { font-weight: 500; font-size: 14px; }
+.region-pop { font-size: 12px; color: var(--ink-faint); font-family: var(--mono); }
+
+.score-cell { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.score-bar { width: 56px; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.score-fill { height: 100%; border-radius: 2px; }
+.score-num { min-width: 28px; font-weight: 500; }
+
+.pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.pill.high { background: var(--green-dim); color: var(--green); }
+.pill.moderate { background: var(--amber-dim); color: var(--amber); }
+.pill.cautious { background: var(--red-dim); color: var(--red); }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.warn-flag { color: var(--amber); font-size: 12px; cursor: help; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.card {
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  transition: border-color 0.15s;
+}
+.card:hover { border-color: var(--line-strong); }
+.card.targeted { border-color: var(--accent); }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.card h3 { font-family: var(--display); font-size: 17px; font-weight: 500; }
+.card .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.card .metric { background: var(--bg); border-radius: 6px; padding: 10px 12px; }
+.card .metric .label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 4px; }
+.card .metric .val { font-family: var(--mono); font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.card .flag-note { background: var(--amber-dim); border-left: 2px solid var(--amber); color: var(--amber); font-size: 12px; padding: 8px 10px; border-radius: 0 4px 4px 0; margin-bottom: 12px; }
+.card-actions { display: flex; gap: 8px; }
+.card-actions button { flex: 1; font-size: 12px; padding: 8px 10px; }
+
+.section-title {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 500;
+  margin: 40px 0 16px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.section-title .count { font-family: var(--mono); font-size: 13px; color: var(--ink-faint); }
+
+.targets { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.target-chip {
+  background: var(--bg-raise);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.target-chip .name { font-weight: 500; }
+.target-chip .meta { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
+.target-chip .remove { background: none; border: none; color: var(--ink-faint); font-size: 16px; padding: 4px 8px; cursor: pointer; }
+.target-chip .remove:hover { color: var(--red); }
+.empty-note { color: var(--ink-faint); font-size: 13px; padding: 20px 0; }
+
+.notes-area {
+  width: 100%;
+  min-height: 90px;
+  background: var(--bg-raise);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  padding: 12px;
+  border-radius: 6px;
+  resize: vertical;
+  outline: none;
+}
+.notes-area:focus { border-color: var(--accent); }
+.notes-hint { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-top: 6px; }
+
+.detail-row td { padding: 0 !important; border-bottom: 1px solid var(--line-strong); }
+.detail-inner {
+  background: var(--bg);
+  padding: 18px 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+.detail-block h4 { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 8px; }
+.detail-block p { font-size: 13px; color: var(--ink-dim); line-height: 1.6; }
+.detail-block .num { font-family: var(--mono); color: var(--ink); }
+
+.legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; font-size: 12px; color: var(--ink-dim); }
+.legend span { display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11px; color: var(--ink-faint); line-height: 1.8; }
+
+@media (max-width: 720px) {
+  .table-wrap { overflow-x: auto; }
+  table { min-width: 900px; }
+  h1 { font-size: 22px; }
+}
+.uw-overlay {
+  position: fixed; inset: 0; background: rgba(6, 8, 12, 0.82);
+  display: none; align-items: flex-start; justify-content: center;
+  z-index: 100; overflow-y: auto; padding: 32px 16px;
+}
+.uw-overlay.open { display: flex; }
+.uw-modal {
+  background: var(--bg-raise); border: 1px solid var(--line-strong);
+  border-radius: 10px; width: 100%; max-width: 880px; padding: 28px 32px;
+}
+.uw-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.uw-head h2 { font-family: var(--display); font-size: 20px; font-weight: 600; }
+.uw-head .close { background: none; border: none; color: var(--ink-faint); font-size: 22px; padding: 4px 10px; cursor: pointer; }
+.uw-head .close:hover { color: var(--red); }
+.uw-sub { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); margin-bottom: 20px; }
+.uw-section { margin-bottom: 22px; }
+.uw-section h3 {
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-bottom: 10px;
+}
+.uw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px 14px; }
+.uw-field { display: flex; flex-direction: column; gap: 3px; }
+.uw-field label { font-size: 11px; color: var(--ink-faint); font-family: var(--mono); }
+.uw-field input { min-width: 0; padding: 7px 10px; font-family: var(--mono); font-size: 13px; }
+.uw-field .auto-note { font-size: 10px; color: var(--ink-faint); font-family: var(--mono); }
+.uw-line { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 13px; padding: 5px 0; border-bottom: 1px dotted var(--line); }
+.uw-line .lbl { color: var(--ink-dim); font-family: var(--sans); }
+.uw-line.total { border-bottom: none; border-top: 1px solid var(--line-strong); padding-top: 8px; font-weight: 500; }
+.uw-line.total .lbl { color: var(--ink); }
+.uw-scen { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.uw-scen-col { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.uw-scen-col h4 { font-family: var(--display); font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+.uw-scen-col .uw-line { font-size: 12px; }
+.uw-gate { border-radius: 8px; padding: 16px 18px; border: 1px solid var(--line-strong); }
+.uw-gate.pass { border-color: var(--green); background: var(--green-dim); }
+.uw-gate.fail { border-color: var(--red); background: var(--red-dim); }
+.uw-gate h4 { font-family: var(--display); font-size: 15px; margin-bottom: 6px; }
+.uw-gate p { font-size: 13px; color: var(--ink-dim); line-height: 1.6; }
+.uw-gate .num { font-family: var(--mono); color: var(--ink); }
+.uw-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+.uw-saved-note { font-family: var(--mono); font-size: 11px; color: var(--green); align-self: center; margin-right: auto; }
+@media (max-width: 720px) { .uw-modal { padding: 20px 16px; } }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="header-row">
+    <div>
+      <div class="eyebrow">GTE-CS · Market intelligence</div>
+      <h1>Multifamily inspection tool</h1>
+    </div>
+    <div class="data-stamp">
+      Data vintage: <span id="dataVintage">July 2026</span><br>
+      Benchmarks: CMHC · CBRE · StatCan
+    </div>
+  </div>
+</header>
+
+<div class="summary" id="summaryBar"></div>
+
+<div class="controls">
+  <div class="control">
+    <label for="sortBy">Sort by</label>
+    <select id="sortBy">
+      <option value="score">Opportunity score</option>
+      <option value="capRate">Cap rate</option>
+      <option value="employment">Employment growth</option>
+      <option value="popGrowth">Population growth</option>
+      <option value="rentGrowth">Rent growth</option>
+      <option value="pricePerUnit">Price per unit (low)</option>
+      <option value="vacancy">Vacancy (low)</option>
+    </select>
+  </div>
+  <div class="control">
+    <label for="filterOpp">Signal</label>
+    <select id="filterOpp">
+      <option value="all">All signals</option>
+      <option value="high">High opportunity</option>
+      <option value="moderate">Moderate</option>
+      <option value="cautious">Cautious</option>
+    </select>
+  </div>
+  <div class="control">
+    <label for="minCap">Min cap rate %</label>
+    <input type="number" id="minCap" value="0" step="0.1" min="0" max="8">
+  </div>
+  <div class="control">
+    <label for="maxPrice">Max price/unit $k</label>
+    <input type="number" id="maxPrice" value="250" step="5" min="50" max="300">
+  </div>
+  <div class="control">
+    <label>&nbsp;</label>
+    <button id="resetBtn">Reset</button>
+  </div>
+  <div class="control" style="margin-left:auto">
+    <label>View</label>
+    <div class="view-toggle">
+      <button id="viewTable" class="active">Table</button>
+      <button id="viewCards">Cards</button>
+    </div>
+  </div>
+</div>
+
+<div id="marketView"></div>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--green)"></span>High opportunity — strong fundamentals</span>
+  <span><span class="dot" style="background:var(--amber)"></span>Moderate — selective buying</span>
+  <span><span class="dot" style="background:var(--red)"></span>Cautious — elevated risk</span>
+  <span><span class="dot" style="border:1px solid var(--accent)"></span>Your target market</span>
+</div>
+
+<div class="section-title">Target markets <span class="count" id="targetCount">0 saved</span></div>
+<div class="targets" id="targetsView"></div>
+
+<div class="section-title">Live listings by area <span class="count" id="listingVintage"></span></div>
+<div class="controls" style="margin-bottom:16px">
+  <div class="control">
+    <label for="listingArea">Area</label>
+    <select id="listingArea">
+      <option value="all">All areas</option>
+    </select>
+  </div>
+  <div class="control">
+    <label for="listingFit">System fit</label>
+    <select id="listingFit">
+      <option value="all">All listings</option>
+      <option value="strong">Strong fit</option>
+      <option value="potential">Potential fit</option>
+      <option value="weak">Outside criteria</option>
+    </select>
+  </div>
+  <div class="control" style="margin-left:auto">
+    <label>&nbsp;</label>
+    <button id="refreshListings" class="primary">↻ Refresh data</button>
+  </div>
+  <div class="control">
+    <label>&nbsp;</label>
+    <span id="refreshStatus" style="font-family:var(--mono);font-size:11px;color:var(--ink-faint);padding:9px 0;display:inline-block"></span>
+  </div>
+</div>
+<div id="listingsView" class="cards"></div>
+
+<div class="section-title">Field notes</div>
+<textarea class="notes-area" id="fieldNotes" placeholder="Broker conversations, off-market leads, rent comps observed on the ground..."></textarea>
+<div class="notes-hint" id="notesSaved">Autosaves locally</div>
+
+<div class="uw-overlay" id="uwOverlay" role="dialog" aria-modal="true" aria-label="Deal underwriting">
+  <div class="uw-modal" id="uwModal"></div>
+</div>
+
+<footer>
+  Scoring model — cap rate 30pts · vacancy 30pts · rent growth 25pts · employment 15pts.<br>
+  Capital recovery lens: target markets should support NOI growth sufficient to refinance out invested capital within 3–4 years.<br>
+  Kingston rent growth (+20.8%) is supply-driven (new premium units), not organic demand — treat as cautious despite headline number.<br>
+  All data stored locally in your browser. Update the DATA object in source to refresh vintages.
+</footer>
+
+</div>
+
+<script>
+const DATA_VINTAGE = 'July 2026';
+
+let MARKETS = [
+  { region: 'Milton', population: 180000, popGrowth: 2.8, employment: 2.8, capRate: 4.8, vacancy: 3.4, rentGrowth: 7.4, pricePerUnit: 185, rent1br: 2012, rent2br: 2600, opportunity: 'high', note: 'Fastest employment growth in the GTA west corridor. Rent growth is demand-driven. Tight supply pipeline relative to household formation.' },
+  { region: 'Oshawa / Durham', population: 280000, popGrowth: 1.2, employment: 1.2, capRate: 5.1, vacancy: 3.8, rentGrowth: 0.5, pricePerUnit: 125, rent1br: 1725, rent2br: 1950, opportunity: 'moderate', note: 'Home turf. Best cap-rate-to-vacancy combination in the GTA east. One of the few Ontario markets with positive rent growth. Strong fit for the 3-4 year capital recovery model.' },
+  { region: 'Hamilton', population: 652000, popGrowth: 1.84, employment: 1.84, capRate: 4.9, vacancy: 4.2, rentGrowth: -2.1, pricePerUnit: 160, rent1br: 1900, rent2br: 2400, opportunity: 'moderate', note: 'Diversifying economy off steel. Watch immigration policy impact on student demand near McMaster.' },
+  { region: 'Ottawa', population: 1150000, popGrowth: 2.2, employment: 2.2, capRate: 4.75, vacancy: 4.5, rentGrowth: -3.2, pricePerUnit: 175, rent1br: 2100, rent2br: 2750, opportunity: 'moderate', note: 'Government employment base is stable. Rent softness is broad but shallow; strong employment growth underneath.' },
+  { region: 'Kitchener-Waterloo', population: 320000, popGrowth: 2.1, employment: 2.1, capRate: 4.5, vacancy: 4.0, rentGrowth: -1.5, pricePerUnit: 155, rent1br: 1850, rent2br: 2350, opportunity: 'moderate', note: 'Tech employment anchor. Compressed cap rates reflect institutional interest.' },
+  { region: 'Toronto (GTA)', population: 3360000, popGrowth: 1.6, employment: 1.6, capRate: 4.5, vacancy: 3.0, rentGrowth: -2.8, pricePerUnit: 220, rent1br: 2246, rent2br: 2939, opportunity: 'moderate', note: 'Lowest vacancy in the province but priced for it. Hard to hit capital recovery targets at 4.5% cap and $220k/unit.' },
+  { region: 'Markham', population: 368000, popGrowth: 1.7, employment: 1.7, capRate: 4.4, vacancy: 3.3, rentGrowth: -1.8, pricePerUnit: 195, rent1br: 2250, rent2br: 2950, opportunity: 'moderate', note: 'Tightest cap rate on the board. Institutional-grade pricing.' },
+  { region: 'Mississauga', population: 781000, popGrowth: 1.3, employment: 1.3, capRate: 4.55, vacancy: 3.1, rentGrowth: -2.4, pricePerUnit: 210, rent1br: 2180, rent2br: 2850, opportunity: 'moderate', note: 'Low vacancy, high entry price. Similar math problem to Toronto core.' },
+  { region: 'Brampton', population: 791000, popGrowth: 1.4, employment: 1.4, capRate: 4.6, vacancy: 3.2, rentGrowth: -2.5, pricePerUnit: 195, rent1br: 2150, rent2br: 2800, opportunity: 'moderate', note: 'Strong population base, low vacancy. Watch secondary-suite competition on rents.' },
+  { region: 'London', population: 489000, popGrowth: 1.1, employment: 1.1, capRate: 5.0, vacancy: 4.8, rentGrowth: -3.1, pricePerUnit: 145, rent1br: 1750, rent2br: 2150, opportunity: 'moderate', note: 'Student demand exposure (Western, Fanshawe) — sensitive to immigration policy changes.' },
+  { region: 'Kingston', population: 186000, popGrowth: 1.5, employment: 1.5, capRate: 5.2, vacancy: 6.1, rentGrowth: 20.8, pricePerUnit: 165, rent1br: 1950, rent2br: 2400, opportunity: 'cautious', flag: 'Rent growth is supply-driven, not organic demand', note: 'The +20.8% headline is new premium supply skewing averages, not market-wide rent power. 6.1% vacancy tells the real story. Fails the capital recovery sniff test.' },
+  { region: 'Peterborough', population: 145000, popGrowth: 0.8, employment: 0.8, capRate: 5.4, vacancy: 5.2, rentGrowth: -2.3, pricePerUnit: 105, rent1br: 1550, rent2br: 1800, opportunity: 'cautious', note: 'Cheapest entry point on the board. Weak employment growth limits rent upside — hard to force NOI growth for a 3-4 year refi.' },
+  { region: 'St. Catharines-Niagara', population: 380000, popGrowth: 0.9, employment: 0.9, capRate: 5.3, vacancy: 5.5, rentGrowth: -2.2, pricePerUnit: 140, rent1br: 1700, rent2br: 2100, opportunity: 'cautious', note: 'Border economy exposure to CUSMA 2026 review. Elevated vacancy.' },
+  { region: 'Windsor', population: 266000, popGrowth: 0.6, employment: 0.6, capRate: 5.6, vacancy: 5.8, rentGrowth: -3.8, pricePerUnit: 115, rent1br: 1651, rent2br: 2050, opportunity: 'cautious', note: 'Highest cap rate in Ontario for a reason: auto-sector trade uncertainty, weakest employment growth, falling rents.' }
+];
+
+let LISTINGS_VINTAGE = 'Fetched July 27, 2026';
+let LISTINGS = [
+  { area: 'Oshawa / Durham', name: '300 Athol St, Whitby', price: 2100000, units: 8, unitMix: '8 × 2BR', sf: 8202, broker: 'Royal LePage Frank', listed: 'Jun 2026', source: 'LoopNet', url: 'https://www.loopnet.ca/Listing/300-Athol-St-Whitby-ON/41044568/', fit: 'strong', fitNote: 'Textbook system fit: 8 units, brick & block, 50 years same owner, explicit rental upside, coin laundry income. Legacy rents almost certain — this is the repositioning profile the 3-4 year capital recovery model wants.' },
+  { area: 'Oshawa / Durham', name: '150 Celina St, Oshawa', price: 1188888, units: null, unitMix: 'Apartment bldg, 3,184 SF', sf: 3184, broker: 'Our Neighbourhood Realty', listed: 'May 2026', source: 'LoopNet', url: 'https://www.loopnet.ca/Listing/150-Celina-St-Oshawa-ON/40661915/', fit: 'potential', fitNote: 'Central Oshawa, entry price inside the band. Unit count and rent roll unpublished — request rent roll and 12-month actuals before underwriting.' },
+  { area: 'Oshawa / Durham', name: '271 Tresane St, Oshawa', price: 1799900, units: 4, unitMix: '4 × 2BR new build (10 units w/ 255 Tresane)', sf: 3524, broker: 'CPPI Realty', listed: 'Jun 2025', source: 'LoopNet', url: 'https://www.loopnet.ca/Listing/271-Tresane-St-Oshawa-ON/36537559/', fit: 'weak', fitNote: 'New build already leased at market with scheduled increases — $450k/unit and no rent gap means no forced-appreciation lever. Fails the capital recovery gate despite being a clean asset.' },
+  { area: 'Oshawa / Durham', name: 'Simcoe Residence, 1645 Simcoe St N', price: null, units: 15, unitMix: '15 units / 61 beds, student housing', sf: 25390, broker: 'Colliers', listed: 'Jun 2026', source: 'LoopNet', url: 'https://www.loopnet.ca/Listing/1645-Simcoe-St-N-Oshawa-ON/40758328/', fit: 'potential', fitNote: 'Purpose-built student (2015) beside Ontario Tech / Durham College, 96.7% occupancy. Bigger than target band and student model carries immigration-policy exposure — but rental optimization upside is real. Price on request.' },
+  { area: 'Oshawa / Durham', name: 'Ontario East Portfolio', price: null, units: 152, unitMix: '6 properties: Acton, Whitby, Oshawa, Brighton', sf: 138812, broker: 'Avison Young', listed: 'Dec 2025', source: 'LoopNet', url: 'https://www.loopnet.ca/Listing/Ontario-East-Portfolio/38626338/', fit: 'weak', fitNote: '152 units, 75% renovated, stabilized. Institutional scale and the value-add is mostly done. JV-syndication territory, not a personal capital-recovery play.' },
+  { area: 'Hamilton', name: '4-unit apartment, Hamilton Mountain', price: 1430000, units: 4, unitMix: '4 units, 3,000 SF', sf: 3000, broker: 'via LoopNet', listed: '2026', source: 'LoopNet', url: 'https://www.loopnet.com/search/apartment-buildings/hamilton-on--canada/for-sale/', fit: 'potential', fitNote: 'Listed ~$1.02M USD (~$1.43M CAD). Under 5 units means residential financing rules, not DCR-based commercial — verify rents vs Mountain market before pursuing.' },
+  { area: 'Hamilton', name: '9-unit mixed-use, downtown Hamilton', price: null, units: 9, unitMix: '6 × 2BR, 2 × 1BR, 1 bachelor + retail', sf: null, broker: 'Re/Max Escarpment', listed: 'Oct 2024', source: 'LoopNet', url: 'https://www.loopnet.ca/search/commercial-real-estate/hamilton-on--canada/for-sale/', fit: 'potential', fitNote: 'Strong unit mix with 9 parking spaces and ground-floor retail. Mixed-use complicates CMHC financing but the residential count fits the band. New boiler 2020.' }
+];
+
+const LS_TARGETS = 'gtecs_target_markets';
+const LS_NOTES = 'gtecs_field_notes';
+
+let state = {
+  sortBy: 'score',
+  filterOpp: 'all',
+  minCap: 0,
+  maxPrice: 250,
+  view: 'table',
+  expanded: null,
+  targets: JSON.parse(localStorage.getItem(LS_TARGETS) || '[]')
+};
+
+function score(m) {
+  let s = 0;
+  s += m.capRate >= 5 ? 30 : m.capRate >= 4.7 ? 25 : m.capRate >= 4.5 ? 15 : 10;
+  s += m.vacancy < 4 ? 30 : m.vacancy < 5 ? 20 : 10;
+  if (m.flag) { s += 5; }
+  else { s += m.rentGrowth > 2 ? 25 : m.rentGrowth > -2 ? 15 : 5; }
+  s += m.employment > 1.8 ? 15 : m.employment > 1.2 ? 10 : 5;
+  return s;
+}
+
+function scoreColor(s) {
+  return s >= 75 ? 'var(--green)' : s >= 60 ? 'var(--amber)' : 'var(--red)';
+}
+
+function fmt(n, dec) { return n.toLocaleString('en-CA', { minimumFractionDigits: dec ?? 0, maximumFractionDigits: dec ?? 0 }); }
+
+function filtered() {
+  let list = MARKETS.filter(m =>
+    (state.filterOpp === 'all' || m.opportunity === state.filterOpp) &&
+    m.capRate >= state.minCap &&
+    m.pricePerUnit <= state.maxPrice
+  );
+  const key = state.sortBy;
+  list.sort((a, b) => {
+    if (key === 'score') return score(b) - score(a);
+    if (key === 'vacancy' || key === 'pricePerUnit') return a[key] - b[key];
+    return b[key] - a[key];
+  });
+  return list;
+}
+
+function renderSummary() {
+  const list = filtered();
+  const avgCap = list.length ? list.reduce((a, m) => a + m.capRate, 0) / list.length : 0;
+  const avgVac = list.length ? list.reduce((a, m) => a + m.vacancy, 0) / list.length : 0;
+  const best = list.length ? list.reduce((a, b) => score(a) >= score(b) ? a : b) : null;
+  const cheapest = list.length ? list.reduce((a, b) => a.pricePerUnit <= b.pricePerUnit ? a : b) : null;
+  document.getElementById('summaryBar').innerHTML = `
+    <div><div class="label">Markets shown</div><div class="value">${list.length}<span style="color:var(--ink-faint);font-size:14px"> / ${MARKETS.length}</span></div></div>
+    <div><div class="label">Avg cap rate</div><div class="value">${avgCap.toFixed(2)}%</div></div>
+    <div><div class="label">Avg vacancy</div><div class="value">${avgVac.toFixed(1)}%</div></div>
+    <div><div class="label">Top score</div><div class="value">${best ? score(best) : '—'}</div><div class="sub">${best ? best.region : ''}</div></div>
+    <div><div class="label">Lowest entry</div><div class="value">$${cheapest ? cheapest.pricePerUnit : '—'}k<span style="color:var(--ink-faint);font-size:13px">/unit</span></div><div class="sub">${cheapest ? cheapest.region : ''}</div></div>
+  `;
+}
+
+function isTargeted(region) { return state.targets.includes(region); }
+
+function toggleTarget(region) {
+  const i = state.targets.indexOf(region);
+  if (i >= 0) state.targets.splice(i, 1); else state.targets.push(region);
+  localStorage.setItem(LS_TARGETS, JSON.stringify(state.targets));
+  render();
+}
+
+function toggleExpand(region) {
+  state.expanded = state.expanded === region ? null : region;
+  render();
+}
+
+function growthCell(v) {
+  const cls = v >= 0 ? 'pos' : 'neg';
+  return `<span class="${cls}">${v > 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+}
+
+function renderTable(list) {
+  const rows = list.map(m => {
+    const s = score(m);
+    const expanded = state.expanded === m.region;
+    let row = `
+      <tr class="${isTargeted(m.region) ? 'targeted' : ''}" onclick="toggleExpand('${m.region.replace(/'/g, "\\'")}')">
+        <td>
+          <div class="region-name">${m.region} ${m.flag ? '<span class="warn-flag" title="' + m.flag + '">⚠</span>' : ''}</div>
+        </td>
+        <td><span class="region-pop">${fmt(m.population / 1000)}k · ${growthCell(m.popGrowth)}</span></td>
+        <td>${growthCell(m.employment)}</td>
+        <td>${m.capRate.toFixed(2)}%</td>
+        <td>${m.vacancy.toFixed(1)}%</td>
+        <td>${growthCell(m.rentGrowth)}</td>
+        <td>$${m.pricePerUnit}k</td>
+        <td>$${fmt(m.rent1br)} / $${fmt(m.rent2br)}</td>
+        <td>
+          <div class="score-cell">
+            <div class="score-bar"><div class="score-fill" style="width:${s}%;background:${scoreColor(s)}"></div></div>
+            <span class="score-num" style="color:${scoreColor(s)}">${s}</span>
+          </div>
+        </td>
+        <td><span class="pill ${m.opportunity}">${m.opportunity}</span></td>
+      </tr>`;
+    if (expanded) {
+      row += `
+      <tr class="detail-row"><td colspan="10">
+        <div class="detail-inner">
+          <div class="detail-block">
+            <h4>Analyst note</h4>
+            <p>${m.note}</p>
+          </div>
+          <div class="detail-block">
+            <h4>Underwriting anchors</h4>
+            <p>1BR market rent <span class="num">$${fmt(m.rent1br)}</span> · 2BR <span class="num">$${fmt(m.rent2br)}</span><br>
+            Entry pricing <span class="num">$${m.pricePerUnit}k/unit</span> · benchmark cap <span class="num">${m.capRate.toFixed(2)}%</span><br>
+            A 10-unit at market: <span class="num">~$${fmt(m.pricePerUnit * 10 / 1000, 2)}M</span> purchase</p>
+          </div>
+          <div class="detail-block">
+            <h4>Capital recovery lens</h4>
+            <p>Every <span class="num">$1,000/mo</span> NOI lift = <span class="num">$${fmt(Math.round(12000 / (m.capRate / 100) / 1000))}k</span> value at ${m.capRate.toFixed(2)}% cap.</p>
+          </div>
+          <div class="detail-block">
+            <h4>Actions</h4>
+            <p>
+              <button onclick="event.stopPropagation();toggleTarget('${m.region.replace(/'/g, "\\'")}')" class="${isTargeted(m.region) ? '' : 'primary'}">${isTargeted(m.region) ? 'Remove target' : 'Add to targets'}</button>
+            </p>
+          </div>
+        </div>
+      </td></tr>`;
+    }
+    return row;
+  }).join('');
+
+  return `
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          ${th('Region', null)}
+          ${th('Population', 'popGrowth')}
+          ${th('Employment', 'employment')}
+          ${th('Cap rate', 'capRate')}
+          ${th('Vacancy', 'vacancy')}
+          ${th('Rent growth', 'rentGrowth')}
+          ${th('$/unit', 'pricePerUnit')}
+          ${th('1BR / 2BR', null)}
+          ${th('Score', 'score')}
+          ${th('Signal', null)}
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>`;
+}
+
+function th(label, key) {
+  const active = key && state.sortBy === key;
+  const click = key ? `onclick="setSort('${key}')"` : '';
+  return `<th ${click}>${label}${active ? '<span class="arrow">▾</span>' : ''}</th>`;
+}
+
+function setSort(key) {
+  state.sortBy = key;
+  document.getElementById('sortBy').value = key;
+  render();
+}
+
+function renderCards(list) {
+  return `<div class="cards">` + list.map(m => {
+    const s = score(m);
+    return `
+    <div class="card ${isTargeted(m.region) ? 'targeted' : ''}">
+      <div class="card-head">
+        <div>
+          <h3>${m.region}</h3>
+          <div class="region-pop">${fmt(m.population / 1000)}k pop · ${growthCell(m.popGrowth)} growth</div>
+        </div>
+        <div style="text-align:right">
+          <div class="score-num" style="color:${scoreColor(s)};font-family:var(--mono);font-size:20px;font-weight:500">${s}</div>
+          <span class="pill ${m.opportunity}">${m.opportunity}</span>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="label">Cap rate</div><div class="val">${m.capRate.toFixed(2)}%</div></div>
+        <div class="metric"><div class="label">Vacancy</div><div class="val">${m.vacancy.toFixed(1)}%</div></div>
+        <div class="metric"><div class="label">Rent growth</div><div class="val">${growthCell(m.rentGrowth)}</div></div>
+        <div class="metric"><div class="label">Employment</div><div class="val">${growthCell(m.employment)}</div></div>
+        <div class="metric"><div class="label">Price / unit</div><div class="val">$${m.pricePerUnit}k</div></div>
+        <div class="metric"><div class="label">1BR / 2BR rent</div><div class="val" style="font-size:13px">$${fmt(m.rent1br)} / $${fmt(m.rent2br)}</div></div>
+      </div>
+      ${m.flag ? `<div class="flag-note">⚠ ${m.flag}</div>` : ''}
+      <div class="card-actions">
+        <button onclick="toggleTarget('${m.region.replace(/'/g, "\\'")}')" class="${isTargeted(m.region) ? '' : 'primary'}">${isTargeted(m.region) ? '✓ Targeted' : 'Add target'}</button>
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function renderTargets() {
+  const el = document.getElementById('targetsView');
+  document.getElementById('targetCount').textContent = `${state.targets.length} saved`;
+  if (!state.targets.length) {
+    el.innerHTML = `<div class="empty-note">No target markets yet. Add regions from the table above — they save to this browser automatically.</div>`;
+    return;
+  }
+  el.innerHTML = state.targets.map(r => {
+    const m = MARKETS.find(x => x.region === r);
+    if (!m) return '';
+    return `
+    <div class="target-chip">
+      <div>
+        <div class="name">${m.region}</div>
+        <div class="meta">${m.capRate.toFixed(2)}% cap · ${m.vacancy.toFixed(1)}% vac · $${m.pricePerUnit}k/unit</div>
+      </div>
+      <button class="remove" onclick="toggleTarget('${m.region.replace(/'/g, "\\'")}')" aria-label="Remove ${m.region}">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function render() {
+  renderSummary();
+  const list = filtered();
+  const view = document.getElementById('marketView');
+  view.innerHTML = list.length
+    ? (state.view === 'table' ? renderTable(list) : renderCards(list))
+    : `<div class="empty-note">No markets match the current filters. Loosen the cap rate or price ceiling.</div>`;
+  renderTargets();
+  document.getElementById('viewTable').classList.toggle('active', state.view === 'table');
+  document.getElementById('viewCards').classList.toggle('active', state.view === 'cards');
+}
+
+document.getElementById('sortBy').addEventListener('change', e => { state.sortBy = e.target.value; render(); });
+document.getElementById('filterOpp').addEventListener('change', e => { state.filterOpp = e.target.value; render(); });
+document.getElementById('minCap').addEventListener('input', e => { state.minCap = parseFloat(e.target.value) || 0; render(); });
+document.getElementById('maxPrice').addEventListener('input', e => { state.maxPrice = parseFloat(e.target.value) || 300; render(); });
+document.getElementById('resetBtn').addEventListener('click', () => {
+  state.sortBy = 'score'; state.filterOpp = 'all'; state.minCap = 0; state.maxPrice = 250;
+  document.getElementById('sortBy').value = 'score';
+  document.getElementById('filterOpp').value = 'all';
+  document.getElementById('minCap').value = 0;
+  document.getElementById('maxPrice').value = 250;
+  render();
+});
+document.getElementById('viewTable').addEventListener('click', () => { state.view = 'table'; render(); });
+document.getElementById('viewCards').addEventListener('click', () => { state.view = 'cards'; render(); });
+
+const LS_WATCH = 'gtecs_listing_watchlist';
+let watchlist = JSON.parse(localStorage.getItem(LS_WATCH) || '[]');
+let listingState = { area: 'all', fit: 'all' };
+
+const areaSel = document.getElementById('listingArea');
+function populateAreaSelect() {
+  const cur = areaSel.value || 'all';
+  areaSel.innerHTML = '<option value="all">All areas</option>';
+  [...new Set(LISTINGS.map(l => l.area))].forEach(a => {
+    const o = document.createElement('option'); o.value = a; o.textContent = a; areaSel.appendChild(o);
+  });
+  areaSel.value = [...areaSel.options].some(o => o.value === cur) ? cur : 'all';
+  listingState.area = areaSel.value;
+}
+populateAreaSelect();
+document.getElementById('listingVintage').textContent = LISTINGS_VINTAGE + ' · LoopNet / broker public data';
+
+const DATA_BASE = 'data/';
+async function refreshData() {
+  const status = document.getElementById('refreshStatus');
+  status.textContent = 'Fetching…';
+  try {
+    const bust = '?t=' + Date.now();
+    const [lRes, mRes] = await Promise.all([
+      fetch(DATA_BASE + 'listings.json' + bust),
+      fetch(DATA_BASE + 'markets.json' + bust)
+    ]);
+    if (!lRes.ok) throw new Error('listings.json HTTP ' + lRes.status);
+    const lData = await lRes.json();
+    LISTINGS = lData.listings;
+    LISTINGS_VINTAGE = lData.vintage || 'Unknown vintage';
+    if (mRes.ok) {
+      const mData = await mRes.json();
+      if (mData.markets) MARKETS = mData.markets;
+      if (mData.vintage) document.getElementById('dataVintage').textContent = mData.vintage;
+    }
+    populateAreaSelect();
+    document.getElementById('listingVintage').textContent = LISTINGS_VINTAGE + ' · LoopNet / broker public data';
+    renderListings();
+    filterAndSort();
+    renderSummary();
+    status.textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch (err) {
+    status.textContent = 'Refresh needs hosting (see README) — using embedded data';
+  }
+}
+document.getElementById('refreshListings').addEventListener('click', refreshData);
+if (location.protocol !== 'file:') refreshData();
+
+
+function fitPill(fit) {
+  const map = { strong: ['high', 'Strong fit'], potential: ['moderate', 'Potential'], weak: ['cautious', 'Outside criteria'] };
+  const [cls, label] = map[fit];
+  return `<span class="pill ${cls}">${label}</span>`;
+}
+
+function renderListings() {
+  const list = LISTINGS.filter(l =>
+    (listingState.area === 'all' || l.area === listingState.area) &&
+    (listingState.fit === 'all' || l.fit === listingState.fit)
+  );
+  const el = document.getElementById('listingsView');
+  if (!list.length) { el.innerHTML = '<div class="empty-note">No listings match. Widen the filters or refresh the data.</div>'; return; }
+  el.innerHTML = list.map(l => {
+    const watched = watchlist.includes(l.name);
+    const ppu = l.price && l.units ? Math.round(l.price / l.units / 1000) : null;
+    return `
+    <div class="card ${watched ? 'targeted' : ''}">
+      <div class="card-head">
+        <div>
+          <h3 style="font-size:15px">${l.name}</h3>
+          <div class="region-pop">${l.area} · ${l.source} · listed ${l.listed}</div>
+        </div>
+        ${fitPill(l.fit)}
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="label">Price</div><div class="val">${l.price ? '$' + fmt(l.price) : 'On request'}</div></div>
+        <div class="metric"><div class="label">Units</div><div class="val">${l.units ?? '—'}${ppu ? ' · $' + ppu + 'k/u' : ''}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-dim);margin-bottom:10px">${l.unitMix}${l.sf ? ' · ' + fmt(l.sf) + ' SF' : ''} · ${l.broker}</div>
+      <div class="flag-note" style="background:transparent;border-left-color:${l.fit === 'strong' ? 'var(--green)' : l.fit === 'potential' ? 'var(--amber)' : 'var(--red)'};color:var(--ink-dim)">${l.fitNote}</div>
+      <div class="card-actions">
+        <button onclick="openUnderwrite('${l.name.replace(/'/g, "\\'")}')" class="primary">Underwrite</button>
+        <button onclick="toggleWatch('${l.name.replace(/'/g, "\\'")}')">${watched ? '✓ Watching' : 'Watch'}</button>
+        <button onclick="window.open('${l.url}', '_blank')">Listing</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleWatch(name) {
+  const i = watchlist.indexOf(name);
+  if (i >= 0) watchlist.splice(i, 1); else watchlist.push(name);
+  localStorage.setItem(LS_WATCH, JSON.stringify(watchlist));
+  renderListings();
+}
+
+areaSel.addEventListener('change', e => { listingState.area = e.target.value; renderListings(); });
+document.getElementById('listingFit').addEventListener('change', e => { listingState.fit = e.target.value; renderListings(); });
+renderListings();
+
+const LS_UW = 'gtecs_underwriting';
+let uwStore = JSON.parse(localStorage.getItem(LS_UW) || '{}');
+let uwCurrent = null;
+
+function ontarioLTT(price) {
+  let t = 0;
+  t += Math.min(price, 55000) * 0.005;
+  if (price > 55000) t += (Math.min(price, 250000) - 55000) * 0.01;
+  if (price > 250000) t += (Math.min(price, 400000) - 250000) * 0.015;
+  if (price > 400000) t += (Math.min(price, 2000000) - 400000) * 0.02;
+  if (price > 2000000) t += (price - 2000000) * 0.025;
+  return Math.round(t);
+}
+
+function mtgPayment(principal, annualRate, years) {
+  if (principal <= 0 || annualRate <= 0) return 0;
+  const r = Math.pow(1 + annualRate / 2, 1 / 6) - 1, n = years * 12;
+  return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+}
+
+function yearOnePaydown(principal, annualRate, years) {
+  if (principal <= 0 || annualRate <= 0) return 0;
+  const r = Math.pow(1 + annualRate / 2, 1 / 6) - 1, pmt = mtgPayment(principal, annualRate, years);
+  let bal = principal, paid = 0;
+  for (let i = 0; i < 12; i++) { const int = bal * r; paid += pmt - int; bal -= pmt - int; }
+  return paid;
+}
+
+function uwDefaults(l) {
+  const mk = MARKETS.find(m => l.area.startsWith(m.region.split(' /')[0]) || m.region.startsWith(l.area.split(' /')[0])) || MARKETS[1];
+  const units = l.units || 4;
+  const estRent = Math.round(((mk.rent1br + mk.rent2br) / 2) * units);
+  return {
+    price: l.price || Math.round(units * mk.pricePerUnit * 1000),
+    ltv1: 75, rate1: 5.0, ltv2: 0, rate2: 0,
+    repairs: 0, inspection: 2000, appraisal: 5000, survey: 0,
+    finCosts: 0, hst: 0, legal: 9000, other: 0,
+    lttOverride: '', spfOverride: '',
+    grossRents: estRent, laundry: units >= 6 ? 150 : 0, otherRents: 0,
+    hydro: Math.round(units * 12), elecWater: Math.round(units * 60),
+    propTax: Math.round((l.price || units * mk.pricePerUnit * 1000) * 0.011),
+    condoFees: 0, gas: Math.round(units * 45),
+    pmPct: 6, rpPct: 0, rmPct: 6, insurance: units * 90,
+    waterTank: 0, laundryRental: 0, pest: 0, otherExp: 0,
+    vacancyPct: 2, appreciationPct: 4,
+    capRate: mk.capRate, rentGrowthPct: 3,
+    lenderVacMin: 3, lenderPmMin: 5
+  };
+}
+
+function fin(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function money(n) { return '$' + Math.round(n).toLocaleString('en-CA'); }
+function pct(n) { return (n * 100).toFixed(2) + '%'; }
+
+function openUnderwrite(name) {
+  const l = LISTINGS.find(x => x.name === name);
+  if (!l) return;
+  uwCurrent = name;
+  const d = Object.assign(uwDefaults(l), uwStore[name] || {});
+  const F = (id, label, val, note) => `
+    <div class="uw-field">
+      <label for="${id}">${label}</label>
+      <input type="number" id="${id}" value="${val}" step="any" oninput="uwCalc()">
+      ${note ? `<span class="auto-note">${note}</span>` : ''}
+    </div>`;
+  document.getElementById('uwModal').innerHTML = `
+    <div class="uw-head">
+      <h2>${l.name}</h2>
+      <button class="close" onclick="closeUnderwrite()" aria-label="Close">✕</button>
+    </div>
+    <div class="uw-sub">${l.area} · ${l.unitMix} · Methodology: Property Analyzer (D'Souza) — edit any input, everything recalculates</div>
+
+    <div class="uw-section">
+      <h3>Purchase & financing</h3>
+      <div class="uw-grid">
+        ${F('uw_price', 'Purchase price $', d.price)}
+        ${F('uw_units', 'Units', l.units || 4)}
+        ${F('uw_ltv1', '1st mortgage %', d.ltv1)}
+        ${F('uw_rate1', '1st mortgage rate %', d.rate1)}
+        ${F('uw_ltv2', '2nd mortgage %', d.ltv2)}
+        ${F('uw_rate2', '2nd mortgage rate % (int only)', d.rate2)}
+      </div>
+    </div>
+
+    <div class="uw-section">
+      <h3>Investment — acquisition costs</h3>
+      <div class="uw-grid">
+        ${F('uw_repairs', 'Immediate repairs & renos $', d.repairs)}
+        ${F('uw_inspection', 'Inspection $', d.inspection)}
+        ${F('uw_appraisal', 'Appraisal / Phase 1 $', d.appraisal)}
+        ${F('uw_survey', 'Survey $', d.survey)}
+        ${F('uw_finCosts', 'Financing costs $', d.finCosts, 'lender + broker fees')}
+        ${F('uw_hst', 'HST (commercial units) $', d.hst)}
+        ${F('uw_legal', 'Legal incl. disbursements $', d.legal)}
+        ${F('uw_other', 'Other $', d.other)}
+        ${F('uw_lttOverride', 'LTT override $ (0 = auto)', d.lttOverride || 0, 'auto: Ontario formula')}
+        ${F('uw_spfOverride', 'Staying power override $ (0 = auto)', d.spfOverride || 0, 'auto: one month income')}
+      </div>
+      <div id="uw_investOut" style="margin-top:12px"></div>
+    </div>
+
+    <div class="uw-section">
+      <h3>Income (monthly)</h3>
+      <div class="uw-grid">
+        ${F('uw_grossRents', 'Gross rents $/mo', d.grossRents, 'use actual market rents, not conservative guesses')}
+        ${F('uw_laundry', 'Laundry $/mo', d.laundry)}
+        ${F('uw_otherRents', 'Other rents $/mo', d.otherRents, 'parking, storage')}
+      </div>
+    </div>
+
+    <div class="uw-section">
+      <h3>Operating expenses</h3>
+      <div class="uw-grid">
+        ${F('uw_hydro', 'Hydro common $/mo', d.hydro)}
+        ${F('uw_elecWater', 'Electricity + water $/mo', d.elecWater, 'get 12-24 mo actuals')}
+        ${F('uw_propTax', 'Property taxes $/yr', d.propTax)}
+        ${F('uw_condoFees', 'Condo fees $/mo', d.condoFees)}
+        ${F('uw_gas', 'Gas $/mo', d.gas)}
+        ${F('uw_pmPct', 'Property management %', d.pmPct, 'Quentin: 5-7%, not 10%')}
+        ${F('uw_rpPct', 'Rental pool mgmt %', d.rpPct)}
+        ${F('uw_rmPct', 'Repairs & maintenance %', d.rmPct, '≈ $750/unit/yr')}
+        ${F('uw_insurance', 'Insurance $/mo', d.insurance)}
+        ${F('uw_waterTank', 'Water tank rental $/mo', d.waterTank)}
+        ${F('uw_laundryRental', 'Laundry rental $/mo', d.laundryRental)}
+        ${F('uw_pest', 'Pest control $/mo', d.pest)}
+        ${F('uw_otherExp', 'Other $/mo', d.otherExp)}
+        ${F('uw_vacancyPct', 'Vacancy allowance %', d.vacancyPct)}
+      </div>
+      <div id="uw_noiOut" style="margin-top:12px"></div>
+    </div>
+
+    <div class="uw-section">
+      <h3>Amortization scenarios — 25 / 30 / 40 year</h3>
+      <div class="uw-grid" style="margin-bottom:12px">
+        ${F('uw_appreciationPct', 'Appreciation assumption %', d.appreciationPct)}
+        ${F('uw_lenderVacMin', 'Lender min vacancy %', d.lenderVacMin, "for lender's-view DCR")}
+        ${F('uw_lenderPmMin', 'Lender min PM %', d.lenderPmMin)}
+      </div>
+      <div class="uw-scen" id="uw_scenOut"></div>
+    </div>
+
+    <div class="uw-section">
+      <h3>Capital recovery gate — the filter question</h3>
+      <div class="uw-grid" style="margin-bottom:12px">
+        ${F('uw_capRate', 'Area cap rate % (valuation)', d.capRate)}
+        ${F('uw_rentGrowthPct', 'Achievable NOI growth %/yr', d.rentGrowthPct, 'via repositioning + turnover')}
+      </div>
+      <div id="uw_gateOut"></div>
+    </div>
+
+    <div class="uw-actions">
+      <span class="uw-saved-note" id="uw_savedNote"></span>
+      <button onclick="uwReset()">Reset to defaults</button>
+      <button class="primary" onclick="uwSave()">Save underwriting</button>
+    </div>`;
+  document.getElementById('uwOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  uwCalc();
+}
+
+function closeUnderwrite() {
+  document.getElementById('uwOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  uwCurrent = null;
+}
+
+function uwCalc() {
+  const price = fin('uw_price'), units = fin('uw_units') || 1;
+  const m1 = price * fin('uw_ltv1') / 100, m2 = price * fin('uw_ltv2') / 100;
+  const down = price - m1 - m2;
+  const ltt = fin('uw_lttOverride') > 0 ? fin('uw_lttOverride') : ontarioLTT(price);
+
+  const incMonthly = fin('uw_grossRents') + fin('uw_laundry') + fin('uw_otherRents');
+  const incAnnual = incMonthly * 12;
+  const spf = fin('uw_spfOverride') > 0 ? fin('uw_spfOverride') : incMonthly;
+
+  const invest = down + ltt + fin('uw_repairs') + fin('uw_inspection') + fin('uw_appraisal')
+    + fin('uw_survey') + fin('uw_finCosts') + fin('uw_hst') + fin('uw_legal') + spf + fin('uw_other');
+
+  document.getElementById('uw_investOut').innerHTML = `
+    <div class="uw-line"><span class="lbl">Down payment (auto: price − mortgages)</span><span>${money(down)}</span></div>
+    <div class="uw-line"><span class="lbl">Land transfer tax (Ontario formula)</span><span>${money(ltt)}</span></div>
+    <div class="uw-line"><span class="lbl">Staying power fund (one month income)</span><span>${money(spf)}</span></div>
+    <div class="uw-line total"><span class="lbl">Total investment</span><span>${money(invest)}</span></div>`;
+
+  const pmA = incAnnual * fin('uw_pmPct') / 100;
+  const rpA = incAnnual * fin('uw_rpPct') / 100;
+  const rmA = incAnnual * fin('uw_rmPct') / 100;
+  const opexA = fin('uw_hydro') * 12 + fin('uw_elecWater') * 12 + fin('uw_propTax')
+    + fin('uw_condoFees') * 12 + fin('uw_gas') * 12 + pmA + rpA + rmA
+    + fin('uw_insurance') * 12 + fin('uw_waterTank') * 12 + fin('uw_laundryRental') * 12
+    + fin('uw_pest') * 12 + fin('uw_otherExp') * 12;
+  const vacA = incAnnual * fin('uw_vacancyPct') / 100;
+  const noi = incAnnual - opexA - vacA;
+  const oer = incAnnual > 0 ? opexA / incAnnual : 0;
+
+  document.getElementById('uw_noiOut').innerHTML = `
+    <div class="uw-line"><span class="lbl">Total income</span><span>${money(incAnnual)}/yr</span></div>
+    <div class="uw-line"><span class="lbl">Total operating expenses (OER ${pct(oer)})</span><span>${money(opexA)}/yr</span></div>
+    <div class="uw-line"><span class="lbl">Less vacancy allowance</span><span>${money(vacA)}/yr</span></div>
+    <div class="uw-line total"><span class="lbl">Net operating income (NOI)</span><span>${money(noi)}/yr · ${money(noi / 12)}/mo</span></div>`;
+
+  const lenderVac = Math.max(fin('uw_vacancyPct'), fin('uw_lenderVacMin')) / 100 * incAnnual;
+  const lenderPm = Math.max(fin('uw_pmPct'), fin('uw_lenderPmMin')) / 100 * incAnnual;
+  const lenderRm = Math.max(rmA, 750 * units);
+  const lenderNoi = incAnnual - (opexA - pmA - rmA + lenderPm + lenderRm) - lenderVac;
+
+  const scen = [25, 30, 40].map(yrs => {
+    const p1 = mtgPayment(m1, fin('uw_rate1') / 100, yrs);
+    const p2 = m2 * (fin('uw_rate2') / 100) / 12;
+    const pay = (p1 + p2) * 12;
+    const cf = noi - pay;
+    const dcr = pay > 0 ? noi / pay : 0;
+    const dcrL = pay > 0 ? lenderNoi / pay : 0;
+    const paydown = yearOnePaydown(m1, fin('uw_rate1') / 100, yrs);
+    const appr = price * fin('uw_appreciationPct') / 100;
+    const roiCash = invest > 0 ? cf / invest : 0;
+    const roiPd = invest > 0 ? paydown / invest : 0;
+    const roiAp = invest > 0 ? appr / invest : 0;
+    return { yrs, pay, cf, dcr, dcrL, paydown, roiCash, roiPd, roiAp, roi: roiCash + roiPd + roiAp };
+  });
+
+  document.getElementById('uw_scenOut').innerHTML = scen.map(s => `
+    <div class="uw-scen-col">
+      <h4>${s.yrs}-year</h4>
+      <div class="uw-line"><span class="lbl">Payment</span><span>${money(s.pay / 12)}/mo</span></div>
+      <div class="uw-line"><span class="lbl">Cash flow</span><span style="color:${s.cf >= 0 ? 'var(--green)' : 'var(--red)'}">${money(s.cf)}/yr</span></div>
+      <div class="uw-line"><span class="lbl">Cap rate (NOI/price)</span><span>${pct(price > 0 ? noi / price : 0)}</span></div>
+      <div class="uw-line"><span class="lbl">DCR — your view</span><span style="color:${s.dcr >= 1.2 ? 'var(--green)' : s.dcr >= 1.1 ? 'var(--amber)' : 'var(--red)'}">${s.dcr.toFixed(2)}</span></div>
+      <div class="uw-line"><span class="lbl">DCR — lender's view</span><span style="color:${s.dcrL >= 1.2 ? 'var(--green)' : s.dcrL >= 1.1 ? 'var(--amber)' : 'var(--red)'}">${s.dcrL.toFixed(2)}</span></div>
+      <div class="uw-line"><span class="lbl">Cash return</span><span>${pct(s.roiCash)}</span></div>
+      <div class="uw-line"><span class="lbl">Mortgage paydown</span><span>${pct(s.roiPd)}</span></div>
+      <div class="uw-line"><span class="lbl">Appreciation</span><span>${pct(s.roiAp)}</span></div>
+      <div class="uw-line total"><span class="lbl">Total ROI</span><span>${pct(s.roi)}</span></div>
+    </div>`).join('');
+
+  const cap = fin('uw_capRate') / 100, g = fin('uw_rentGrowthPct') / 100;
+  let yrsRec = null, n = noi;
+  if (cap > 0) {
+    for (let y = 1; y <= 10; y++) {
+      n *= (1 + g);
+      const refiVal = n / cap;
+      const equity = refiVal * 0.75 - m1 - m2;
+      if (equity >= invest * 0.9) { yrsRec = y; break; }
+    }
+  }
+  const noiNeeded = cap > 0 ? (cap * (invest * 0.9 + m1 + m2) / 0.75) - noi : 0;
+  const monthlyLift = Math.max(0, noiNeeded) / 12;
+  const pass = yrsRec !== null && yrsRec <= 4;
+  document.getElementById('uw_gateOut').innerHTML = `
+    <div class="uw-gate ${pass ? 'pass' : 'fail'}">
+      <h4>${pass ? '✓ Passes the gate' : '✗ Fails the gate'} ${yrsRec ? '— capital back in ~' + yrsRec + ' year' + (yrsRec > 1 ? 's' : '') : '— not recoverable within 10 years at these assumptions'}</h4>
+      <p>Refinance test at 75% LTV on value = NOI ÷ ${(cap * 100).toFixed(2)}% cap. To pull out <span class="num">${money(invest)}</span> invested, NOI must reach <span class="num">${money(noi + Math.max(0, noiNeeded))}</span>/yr — a lift of <span class="num">${money(Math.max(0, noiNeeded))}</span>/yr (<span class="num">${money(monthlyLift)}</span>/mo). Every $1,000/mo of NOI lift adds <span class="num">${money(cap > 0 ? 12000 / cap : 0)}</span> of value. ${pass ? 'Fits the 3-4 year capital recovery system.' : 'If the rent gap and repositioning levers cannot produce this lift, the deal does not fit the system — even if it cash flows.'}</p>
+    </div>`;
+}
+
+function uwSave() {
+  if (!uwCurrent) return;
+  const ids = ['price','ltv1','rate1','ltv2','rate2','repairs','inspection','appraisal','survey','finCosts','hst','legal','other','lttOverride','spfOverride','grossRents','laundry','otherRents','hydro','elecWater','propTax','condoFees','gas','pmPct','rpPct','rmPct','insurance','waterTank','laundryRental','pest','otherExp','vacancyPct','appreciationPct','capRate','rentGrowthPct','lenderVacMin','lenderPmMin'];
+  const saved = {};
+  ids.forEach(k => saved[k] = fin('uw_' + k));
+  uwStore[uwCurrent] = saved;
+  localStorage.setItem(LS_UW, JSON.stringify(uwStore));
+  document.getElementById('uw_savedNote').textContent = 'Saved ' + new Date().toLocaleTimeString();
+}
+
+function uwReset() {
+  if (!uwCurrent) return;
+  delete uwStore[uwCurrent];
+  localStorage.setItem(LS_UW, JSON.stringify(uwStore));
+  openUnderwrite(uwCurrent);
+}
+
+document.getElementById('uwOverlay').addEventListener('click', e => {
+  if (e.target.id === 'uwOverlay') closeUnderwrite();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUnderwrite(); });
+
+const notesEl = document.getElementById('fieldNotes');
+notesEl.value = localStorage.getItem(LS_NOTES) || '';
+let noteTimer;
+notesEl.addEventListener('input', () => {
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => {
+    localStorage.setItem(LS_NOTES, notesEl.value);
+    const hint = document.getElementById('notesSaved');
+    hint.textContent = 'Saved ' + new Date().toLocaleTimeString();
+    setTimeout(() => hint.textContent = 'Autosaves locally', 2000);
+  }, 400);
+});
+
+document.getElementById('dataVintage').textContent = DATA_VINTAGE;
+render();
+</script>
+</body>
+</html>
