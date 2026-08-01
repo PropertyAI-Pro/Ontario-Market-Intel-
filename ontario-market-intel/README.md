@@ -2,7 +2,7 @@
 
 Personal deal-sourcing and underwriting dashboard for Ontario multifamily (5–15 unit) acquisitions, built around the 3–4 year capital recovery model (D'Souza methodology).
 
-**Live app (after enabling GitHub Pages):** `https://<your-username>.github.io/ontario-market-intel/`
+**Live app:** `https://zekiyerdem.github.io/ontario-market-intel/`
 
 ## What it does
 
