@@ -311,7 +311,7 @@ footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line);
 <header>
   <div class="header-row">
     <div>
-      <div class="eyebrow">GTE-CS · Market intelligence</div>
+      <div class="eyebrow">Future real estate · Market intelligence tool</div>
       <h1>Multifamily inspection tool</h1>
     </div>
     <div class="data-stamp">
@@ -358,6 +358,10 @@ footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line);
     <button id="resetBtn">Reset</button>
   </div>
   <div class="control" style="margin-left:auto">
+    <label>&nbsp;</label>
+    <button id="addMarketBtn" class="primary">+ Add market</button>
+  </div>
+  <div class="control">
     <label>View</label>
     <div class="view-toggle">
       <button id="viewTable" class="active">Table</button>
@@ -414,6 +418,43 @@ footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line);
   <div class="uw-modal" id="uwModal"></div>
 </div>
 
+<div class="uw-overlay" id="amOverlay" role="dialog" aria-modal="true" aria-label="Add market">
+  <div class="uw-modal" style="max-width:640px">
+    <div class="uw-head">
+      <h2>Add market</h2>
+      <button class="close" onclick="closeAddMarket()" aria-label="Close">✕</button>
+    </div>
+    <div class="uw-sub">Add any area you're researching. Custom markets save to this browser and survive data refreshes.</div>
+    <div class="uw-section">
+      <div class="uw-grid">
+        <div class="uw-field" style="grid-column:1/-1"><label for="am_region">Region name *</label><input type="text" id="am_region" placeholder="e.g. Barrie"></div>
+        <div class="uw-field"><label for="am_population">Population</label><input type="number" id="am_population" value="100000"></div>
+        <div class="uw-field"><label for="am_popGrowth">Population growth %/yr</label><input type="number" id="am_popGrowth" value="1.0" step="0.1"></div>
+        <div class="uw-field"><label for="am_employment">Employment growth %</label><input type="number" id="am_employment" value="1.0" step="0.1"></div>
+        <div class="uw-field"><label for="am_capRate">Cap rate %</label><input type="number" id="am_capRate" value="5.0" step="0.05"></div>
+        <div class="uw-field"><label for="am_vacancy">Vacancy %</label><input type="number" id="am_vacancy" value="4.0" step="0.1"></div>
+        <div class="uw-field"><label for="am_rentGrowth">Rent growth %/yr</label><input type="number" id="am_rentGrowth" value="0" step="0.1"></div>
+        <div class="uw-field"><label for="am_pricePerUnit">Price per unit $k</label><input type="number" id="am_pricePerUnit" value="150"></div>
+        <div class="uw-field"><label for="am_rent1br">1BR rent $/mo</label><input type="number" id="am_rent1br" value="1700"></div>
+        <div class="uw-field"><label for="am_rent2br">2BR rent $/mo</label><input type="number" id="am_rent2br" value="2100"></div>
+        <div class="uw-field"><label for="am_opportunity">Signal</label>
+          <select id="am_opportunity" style="min-width:0">
+            <option value="high">High opportunity</option>
+            <option value="moderate" selected>Moderate</option>
+            <option value="cautious">Cautious</option>
+          </select>
+        </div>
+        <div class="uw-field" style="grid-column:1/-1"><label for="am_note">Analyst note</label><input type="text" id="am_note" placeholder="Why this market is on your radar"></div>
+      </div>
+      <div id="am_error" style="color:var(--red);font-size:12px;font-family:var(--mono);margin-top:8px"></div>
+    </div>
+    <div class="uw-actions">
+      <button onclick="closeAddMarket()">Cancel</button>
+      <button class="primary" onclick="saveMarket()">Add market</button>
+    </div>
+  </div>
+</div>
+
 <footer>
   Scoring model — cap rate 30pts · vacancy 30pts · rent growth 25pts · employment 15pts.<br>
   Capital recovery lens: target markets should support NOI growth sufficient to refinance out invested capital within 3–4 years.<br>
@@ -466,6 +507,69 @@ let state = {
   expanded: null,
   targets: JSON.parse(localStorage.getItem(LS_TARGETS) || '[]')
 };
+
+const LS_CUSTOM = 'gtecs_custom_markets';
+let BASE_MARKETS = MARKETS;
+let customMarkets = JSON.parse(localStorage.getItem(LS_CUSTOM) || '[]');
+function rebuildMarkets() { MARKETS = BASE_MARKETS.concat(customMarkets); }
+rebuildMarkets();
+
+function normArea(s) { return s.toLowerCase().replace(/[^a-z]/g, ' ').trim().split(/\s+/)[0]; }
+function areaMatch(a, b) { return normArea(a) === normArea(b); }
+function dealsFor(region) { return LISTINGS.filter(l => areaMatch(l.area, region)); }
+
+function openAddMarket() {
+  document.getElementById('am_error').textContent = '';
+  document.getElementById('amOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('am_region').focus();
+}
+function closeAddMarket() {
+  document.getElementById('amOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function saveMarket() {
+  const region = document.getElementById('am_region').value.trim();
+  const err = document.getElementById('am_error');
+  if (!region) { err.textContent = 'Region name is required.'; return; }
+  if (MARKETS.some(m => m.region.toLowerCase() === region.toLowerCase())) { err.textContent = 'That region already exists.'; return; }
+  const g = id => parseFloat(document.getElementById(id).value) || 0;
+  customMarkets.push({
+    region,
+    population: g('am_population'),
+    popGrowth: g('am_popGrowth'),
+    employment: g('am_employment'),
+    capRate: g('am_capRate'),
+    vacancy: g('am_vacancy'),
+    rentGrowth: g('am_rentGrowth'),
+    pricePerUnit: g('am_pricePerUnit'),
+    rent1br: g('am_rent1br'),
+    rent2br: g('am_rent2br'),
+    opportunity: document.getElementById('am_opportunity').value,
+    note: document.getElementById('am_note').value.trim() || 'Custom market added by you.',
+    custom: true
+  });
+  localStorage.setItem(LS_CUSTOM, JSON.stringify(customMarkets));
+  rebuildMarkets();
+  closeAddMarket();
+  render();
+}
+function removeCustomMarket(region) {
+  customMarkets = customMarkets.filter(m => m.region !== region);
+  localStorage.setItem(LS_CUSTOM, JSON.stringify(customMarkets));
+  state.targets = state.targets.filter(t => t !== region);
+  localStorage.setItem(LS_TARGETS, JSON.stringify(state.targets));
+  if (state.expanded === region) state.expanded = null;
+  rebuildMarkets();
+  render();
+}
+function showDeals(region) {
+  const opt = [...areaSel.options].find(o => o.value !== 'all' && areaMatch(o.value, region));
+  areaSel.value = opt ? opt.value : 'all';
+  listingState.area = areaSel.value;
+  renderListings();
+  document.getElementById('listingVintage').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 function score(m) {
   let s = 0;
@@ -539,7 +643,7 @@ function renderTable(list) {
     let row = `
       <tr class="${isTargeted(m.region) ? 'targeted' : ''}" onclick="toggleExpand('${m.region.replace(/'/g, "\\'")}')">
         <td>
-          <div class="region-name">${m.region} ${m.flag ? '<span class="warn-flag" title="' + m.flag + '">⚠</span>' : ''}</div>
+          <div class="region-name">${m.region} ${m.custom ? '<span class="pill" style="background:var(--accent-dim);color:var(--accent);font-size:9px;padding:2px 5px">custom</span>' : ''} ${m.flag ? '<span class="warn-flag" title="' + m.flag + '">⚠</span>' : ''}${dealsFor(m.region).length ? ` <span style="font-family:var(--mono);font-size:11px;color:var(--accent)" title="listings tracked in this area">● ${dealsFor(m.region).length}</span>` : ''}</div>
         </td>
         <td><span class="region-pop">${fmt(m.population / 1000)}k · ${growthCell(m.popGrowth)}</span></td>
         <td>${growthCell(m.employment)}</td>
@@ -578,6 +682,8 @@ function renderTable(list) {
             <h4>Actions</h4>
             <p>
               <button onclick="event.stopPropagation();toggleTarget('${m.region.replace(/'/g, "\\'")}')" class="${isTargeted(m.region) ? '' : 'primary'}">${isTargeted(m.region) ? 'Remove target' : 'Add to targets'}</button>
+              <button onclick="event.stopPropagation();showDeals('${m.region.replace(/'/g, "\\'")}')" style="margin-top:6px">Deals in area (${dealsFor(m.region).length}) ↓</button>
+              ${m.custom ? `<button onclick="event.stopPropagation();removeCustomMarket('${m.region.replace(/'/g, "\\'")}')" style="margin-top:6px;color:var(--red)">Delete custom market</button>` : ''}
             </p>
           </div>
         </div>
@@ -646,6 +752,8 @@ function renderCards(list) {
       ${m.flag ? `<div class="flag-note">⚠ ${m.flag}</div>` : ''}
       <div class="card-actions">
         <button onclick="toggleTarget('${m.region.replace(/'/g, "\\'")}')" class="${isTargeted(m.region) ? '' : 'primary'}">${isTargeted(m.region) ? '✓ Targeted' : 'Add target'}</button>
+        <button onclick="showDeals('${m.region.replace(/'/g, "\\'")}')">Deals (${dealsFor(m.region).length})</button>
+        ${m.custom ? `<button onclick="removeCustomMarket('${m.region.replace(/'/g, "\\'")}')" style="color:var(--red)">✕</button>` : ''}
       </div>
     </div>`;
   }).join('') + `</div>`;
@@ -696,6 +804,9 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   document.getElementById('maxPrice').value = 250;
   render();
 });
+document.getElementById('addMarketBtn').addEventListener('click', openAddMarket);
+document.getElementById('amOverlay').addEventListener('click', e => { if (e.target.id === 'amOverlay') closeAddMarket(); });
+
 document.getElementById('viewTable').addEventListener('click', () => { state.view = 'table'; render(); });
 document.getElementById('viewCards').addEventListener('click', () => { state.view = 'cards'; render(); });
 
@@ -732,7 +843,7 @@ async function refreshData() {
     LISTINGS_VINTAGE = lData.vintage || 'Unknown vintage';
     if (mRes.ok) {
       const mData = await mRes.json();
-      if (mData.markets) MARKETS = mData.markets;
+      if (mData.markets) { BASE_MARKETS = mData.markets; rebuildMarkets(); }
       if (mData.vintage) document.getElementById('dataVintage').textContent = mData.vintage;
     }
     populateAreaSelect();
@@ -1076,7 +1187,7 @@ function uwReset() {
 document.getElementById('uwOverlay').addEventListener('click', e => {
   if (e.target.id === 'uwOverlay') closeUnderwrite();
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUnderwrite(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeUnderwrite(); closeAddMarket(); } });
 
 const notesEl = document.getElementById('fieldNotes');
 notesEl.value = localStorage.getItem(LS_NOTES) || '';
