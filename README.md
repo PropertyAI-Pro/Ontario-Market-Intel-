@@ -1,2 +1,0 @@
-# Ontario Market Intel 
-
